@@ -1,18 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Realidad Aumentada - Grupo #2</title>
+
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/AR.js@1.7.2/aframe/build/aframe-ar.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+      background: #000;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 18px;
+      z-index: 10;
+    }
+
+    #instructions {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 14px;
+      text-align: center;
+      width: 80%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    #btn-instrucciones {
+      background: #007BFF;
+      color: white;
+    }
+
+    #btn-instrucciones:hover {
+      background: #0056b3;
+    }
+  </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
+<body>
+  <!-- Encabezado -->
+  <div id="overlay">🔬 Realidad Aumentada - Grupo #2</div>
+
   <a-scene embedded arjs>
-    <!-- Usamos el nuevo marcador personalizado -->
+    <!-- Marcador Personalizado -->
     <a-marker type="pattern" url="https://link0s.github.io/Realdiad-Aumentaeda/pattern-marker.patt">
-      <a-box position="0 0.5 0" material="color: red;"></a-box>
-      <a-text value="¡Usando mi propio marcador!" align="center" position="0 1 0"></a-text>
+      
+      <!-- Modelo 3D del cerebro con animación -->
+      <a-entity
+        gltf-model="https://link0s.github.io/Realdiad-Aumentaeda/brain.glb"
+        position="0 0 0"
+        scale="0.6 0.6 0.6"
+        rotation="0 180 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 7000">
+      </a-entity>
+
+      <!-- Texto flotante con mejor legibilidad -->
+      <a-text value="Grupo #2"
+        position="0 1.8 0"
+        align="center"
+        color="yellow"
+        scale="2 2 2"
+        font="mozillavr">
+      </a-text>
+
     </a-marker>
 
     <a-entity camera></a-entity>
   </a-scene>
+
+  <!-- Botón de instrucciones -->
+  <div id="instructions">
+    📱 Apunta tu cámara al marcador para ver el modelo en realidad aumentada.  
+    <button id="btn-instrucciones">📖 Ver Instrucciones</button>
+  </div>
+
+  <script>
+    document.getElementById('btn-instrucciones').addEventListener('click', function() {
+      alert("📌 PASOS:\n\n1️⃣ Abre esta web en tu celular 📱\n2️⃣ Apunta la cámara al marcador 📸\n3️⃣ ¡Observa el cerebro en realidad aumentada! 🧠\n\n🔄 Puedes girar el marcador para verlo mejor.");
+    });
+  </script>
 </body>
 </html>
