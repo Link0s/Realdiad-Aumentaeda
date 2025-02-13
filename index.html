@@ -16,23 +16,9 @@
       background: #000;
     }
 
-    #overlay {
+    #info-box {
       position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 10px;
-      text-align: center;
-      font-size: 18px;
-      z-index: 10;
-    }
-
-    #instructions {
-      position: absolute;
-      bottom: 20px;
+      bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(255, 255, 255, 0.9);
@@ -42,68 +28,145 @@
       text-align: center;
       width: 80%;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    }
-
-    button {
-      padding: 12px 18px;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      border-radius: 5px;
-      width: 100%;
-      margin-top: 10px;
+      display: none;
     }
 
     #btn-instrucciones {
-      background: #007BFF;
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
       color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      text-align: center;
+      font-size: 24px;
+      line-height: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     }
 
-    #btn-instrucciones:hover {
-      background: #0056b3;
+    /* Ajustes para modo apaisado */
+    @media (orientation: landscape) {
+      #info-box {
+        width: 60%;
+        bottom: 50px;
+        font-size: 16px;
+      }
+
+      #btn-instrucciones {
+        bottom: 20px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        line-height: 40px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Encabezado -->
-  <div id="overlay">🔬 Realidad Aumentada - Grupo #2</div>
+  <!-- Información interactiva -->
+  <div id="info-box">Haz clic en una parte del cerebro para ver información.</div>
+
+  <!-- Botón de instrucciones -->
+  <div id="btn-instrucciones">❓</div>
 
   <a-scene embedded arjs>
     <!-- Marcador Personalizado -->
     <a-marker type="pattern" url="https://link0s.github.io/Realdiad-Aumentaeda/pattern-marker.patt">
       
-      <!-- Modelo 3D del cerebro con animación -->
-      <a-entity
+      <!-- Modelo 3D del cerebro (sin rotación automática) -->
+      <a-entity id="brain"
         gltf-model="https://link0s.github.io/Realdiad-Aumentaeda/Brain.glb"
         position="0 0 0"
-        scale="0.6 0.6 0.6"
-        rotation="0 180 0"
-        animation="property: rotation; to: 0 360 0; loop: true; dur: 7000">
+        scale="1.5 1.5 1.5"
+        rotation="0 180 0">
       </a-entity>
 
-      <!-- Texto flotante con mejor legibilidad -->
-      <a-text value="Grupo #2"
-        position="0 1.8 0"
-        align="center"
-        color="yellow"
-        scale="2 2 2"
-        font="mozillavr">
-      </a-text>
+      <!-- Iconos interactivos -->
+      <a-entity id="frontal-lobe"
+        geometry="primitive: sphere; radius: 0.1"
+        material="color: red"
+        position="0.2 1.5 0.3"
+        event-set__click="_event: click; _target: #info-box; visible: true"
+        data-info="🧠 Lóbulo Frontal: Responsable del pensamiento y la toma de decisiones.">
+      </a-entity>
+
+      <a-entity id="parietal-lobe"
+        geometry="primitive: sphere; radius: 0.1"
+        material="color: blue"
+        position="-0.3 1.5 0.2"
+        event-set__click="_event: click; _target: #info-box; visible: true"
+        data-info="📍 Lóbulo Parietal: Procesa la información sensorial del cuerpo.">
+      </a-entity>
+
+      <a-entity id="occipital-lobe"
+        geometry="primitive: sphere; radius: 0.1"
+        material="color: green"
+        position="0 1.3 -0.5"
+        event-set__click="_event: click; _target: #info-box; visible: true"
+        data-info="👀 Lóbulo Occipital: Responsable del procesamiento visual.">
+      </a-entity>
 
     </a-marker>
 
     <a-entity camera></a-entity>
   </a-scene>
 
-  <!-- Botón de instrucciones -->
-  <div id="instructions">
-    📱 Apunta tu cámara al marcador para ver el modelo en realidad aumentada.  
-    <button id="btn-instrucciones">📖 Ver Instrucciones</button>
-  </div>
-
   <script>
-    document.getElementById('btn-instrucciones').addEventListener('click', function() {
-      alert("📌 PASOS:\n\n1️⃣ Abre esta web en tu celular 📱\n2️⃣ Apunta la cámara al marcador 📸\n3️⃣ ¡Observa el cerebro en realidad aumentada! 🧠\n\n🔄 Puedes girar el marcador para verlo mejor.");
+    let brain = document.getElementById("brain");
+    let isDragging = false;
+    let previousX = 0;
+
+    // Rotación manual con touch/mouse
+    document.addEventListener("mousedown", (event) => {
+      isDragging = true;
+      previousX = event.clientX;
+    });
+
+    document.addEventListener("mousemove", (event) => {
+      if (!isDragging) return;
+      let deltaX = event.clientX - previousX;
+      previousX = event.clientX;
+      let currentRotation = brain.getAttribute("rotation");
+      brain.setAttribute("rotation", { x: currentRotation.x, y: currentRotation.y + deltaX * 0.5, z: currentRotation.z });
+    });
+
+    document.addEventListener("mouseup", () => {
+      isDragging = false;
+    });
+
+    document.addEventListener("touchstart", (event) => {
+      isDragging = true;
+      previousX = event.touches[0].clientX;
+    });
+
+    document.addEventListener("touchmove", (event) => {
+      if (!isDragging) return;
+      let deltaX = event.touches[0].clientX - previousX;
+      previousX = event.touches[0].clientX;
+      let currentRotation = brain.getAttribute("rotation");
+      brain.setAttribute("rotation", { x: currentRotation.x, y: currentRotation.y + deltaX * 0.5, z: currentRotation.z });
+    });
+
+    document.addEventListener("touchend", () => {
+      isDragging = false;
+    });
+
+    // Mostrar información al hacer clic en los iconos
+    document.querySelectorAll("a-entity[data-info]").forEach(icon => {
+      icon.addEventListener("click", () => {
+        let infoBox = document.getElementById("info-box");
+        infoBox.innerText = icon.getAttribute("data-info");
+        infoBox.style.display = "block";
+      });
+    });
+
+    // Botón de instrucciones
+    document.getElementById("btn-instrucciones").addEventListener("click", function() {
+      alert("📌 PASOS:\n\n1️⃣ Abre esta web en tu celular 📱\n2️⃣ Apunta la cámara al marcador 📸\n3️⃣ Toca una parte del cerebro para ver información 🧠\n4️⃣ Arrastra el dedo para girar el modelo.");
     });
   </script>
 </body>
