@@ -45,6 +45,7 @@
       line-height: 50px;
       cursor: pointer;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      z-index: 100;
     }
 
     /* Ajustes para modo apaisado */
@@ -64,6 +65,14 @@
         line-height: 40px;
       }
     }
+
+    /* Mover el icono de VR arriba */
+    .a-enter-vr {
+      position: absolute !important;
+      top: 10px !important;
+      right: 10px !important;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
@@ -79,34 +88,40 @@
       
       <!-- Modelo 3D del cerebro (sin rotación automática) -->
       <a-entity id="brain"
-        gltf-model="https://link0s.github.io/Realdiad-Aumentaeda/Brain.glb"
+        gltf-model="https://link0s.github.io/Realdiad-Aumentaeda/brain.glb"
         position="0 0 0"
         scale="1.5 1.5 1.5"
         rotation="0 180 0">
       </a-entity>
 
+      <!-- Texto flotante siempre visible -->
+      <a-text value="Grupo #2"
+        position="0 2 0"
+        align="center"
+        color="yellow"
+        scale="2 2 2"
+        font="mozillavr">
+      </a-text>
+
       <!-- Iconos interactivos -->
-      <a-entity id="frontal-lobe"
+      <a-entity class="clickable" id="frontal-lobe"
         geometry="primitive: sphere; radius: 0.1"
         material="color: red"
         position="0.2 1.5 0.3"
-        event-set__click="_event: click; _target: #info-box; visible: true"
         data-info="🧠 Lóbulo Frontal: Responsable del pensamiento y la toma de decisiones.">
       </a-entity>
 
-      <a-entity id="parietal-lobe"
+      <a-entity class="clickable" id="parietal-lobe"
         geometry="primitive: sphere; radius: 0.1"
         material="color: blue"
         position="-0.3 1.5 0.2"
-        event-set__click="_event: click; _target: #info-box; visible: true"
         data-info="📍 Lóbulo Parietal: Procesa la información sensorial del cuerpo.">
       </a-entity>
 
-      <a-entity id="occipital-lobe"
+      <a-entity class="clickable" id="occipital-lobe"
         geometry="primitive: sphere; radius: 0.1"
         material="color: green"
         position="0 1.3 -0.5"
-        event-set__click="_event: click; _target: #info-box; visible: true"
         data-info="👀 Lóbulo Occipital: Responsable del procesamiento visual.">
       </a-entity>
 
@@ -119,6 +134,8 @@
     let brain = document.getElementById("brain");
     let isDragging = false;
     let previousX = 0;
+    let initialDistance = 0;
+    let scaleFactor = 1.5;
 
     // Rotación manual con touch/mouse
     document.addEventListener("mousedown", (event) => {
@@ -139,34 +156,45 @@
     });
 
     document.addEventListener("touchstart", (event) => {
-      isDragging = true;
-      previousX = event.touches[0].clientX;
+      if (event.touches.length === 2) {
+        initialDistance = Math.hypot(
+          event.touches[0].clientX - event.touches[1].clientX,
+          event.touches[0].clientY - event.touches[1].clientY
+        );
+      } else {
+        isDragging = true;
+        previousX = event.touches[0].clientX;
+      }
     });
 
     document.addEventListener("touchmove", (event) => {
-      if (!isDragging) return;
-      let deltaX = event.touches[0].clientX - previousX;
-      previousX = event.touches[0].clientX;
-      let currentRotation = brain.getAttribute("rotation");
-      brain.setAttribute("rotation", { x: currentRotation.x, y: currentRotation.y + deltaX * 0.5, z: currentRotation.z });
+      if (event.touches.length === 2) {
+        let currentDistance = Math.hypot(
+          event.touches[0].clientX - event.touches[1].clientX,
+          event.touches[0].clientY - event.touches[1].clientY
+        );
+        let scaleChange = (currentDistance / initialDistance) * scaleFactor;
+        scaleFactor = Math.min(Math.max(scaleChange, 1), 3);
+        brain.setAttribute("scale", `${scaleFactor} ${scaleFactor} ${scaleFactor}`);
+      } else if (isDragging) {
+        let deltaX = event.touches[0].clientX - previousX;
+        previousX = event.touches[0].clientX;
+        let currentRotation = brain.getAttribute("rotation");
+        brain.setAttribute("rotation", { x: currentRotation.x, y: currentRotation.y + deltaX * 0.5, z: currentRotation.z });
+      }
     });
 
     document.addEventListener("touchend", () => {
       isDragging = false;
     });
 
-    // Mostrar información al hacer clic en los iconos
-    document.querySelectorAll("a-entity[data-info]").forEach(icon => {
+    // Mejor método para detectar clics en los puntos
+    document.querySelectorAll(".clickable").forEach(icon => {
       icon.addEventListener("click", () => {
         let infoBox = document.getElementById("info-box");
         infoBox.innerText = icon.getAttribute("data-info");
         infoBox.style.display = "block";
       });
-    });
-
-    // Botón de instrucciones
-    document.getElementById("btn-instrucciones").addEventListener("click", function() {
-      alert("📌 PASOS:\n\n1️⃣ Abre esta web en tu celular 📱\n2️⃣ Apunta la cámara al marcador 📸\n3️⃣ Toca una parte del cerebro para ver información 🧠\n4️⃣ Arrastra el dedo para girar el modelo.");
     });
   </script>
 </body>
