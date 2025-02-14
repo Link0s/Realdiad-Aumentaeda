@@ -16,7 +16,7 @@
       background: #000;
     }
 
-    /* Caja de información */
+    /* Caja de información: se mostrará al presionar el botón de instrucciones */
     #info-box {
       position: absolute;
       bottom: 80px;
@@ -31,9 +31,10 @@
       max-width: 400px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
       display: none;
+      z-index: 101;
     }
 
-    /* Botón de instrucciones */
+    /* Botón de instrucciones (el que tiene el signo de "❓") */
     #btn-instrucciones {
       position: absolute;
       bottom: 20px;
@@ -48,10 +49,10 @@
       line-height: 50px;
       cursor: pointer;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-      z-index: 100;
+      z-index: 102;
     }
 
-    /* Ajustes para modo apaisado */
+    /* Ajustes para modo apaisado (landscape) */
     @media (orientation: landscape) {
       #info-box {
         width: 60%;
@@ -69,6 +70,32 @@
       }
     }
 
+    /* Ajustes para pantallas pequeñas (menos de 400px) */
+    @media (max-width: 400px) {
+      #btn-instrucciones {
+        bottom: 15px;
+        right: 15px;
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+        line-height: 60px;
+      }
+      #info-box {
+        bottom: 100px;
+        font-size: 16px;
+        padding: 20px;
+      }
+      /* Ajuste del botón VR si aparece */
+      .a-enter-vr {
+        top: 15px !important;
+        right: 15px !important;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        line-height: 40px;
+      }
+    }
+
     /* Mover el icono de VR arriba */
     .a-enter-vr {
       position: absolute !important;
@@ -79,17 +106,18 @@
   </style>
 </head>
 <body>
-  <!-- Información interactiva -->
-  <div id="info-box">Gira y acerca el cerebro con los dedos.</div>
+  <!-- Caja de información interactiva -->
+  <div id="info-box">Apunta con tu teléfono al símbolo y verás la acción.</div>
 
   <!-- Botón de instrucciones -->
   <div id="btn-instrucciones">❓</div>
 
-  <a-scene embedded arjs>
+  <!-- Escena de A-Frame con AR.js y VR habilitado -->
+  <a-scene embedded arjs vr-mode-ui="enabled: true">
     <!-- Marcador Personalizado -->
     <a-marker type="pattern" url="https://link0s.github.io/Realdiad-Aumentaeda/pattern-marker.patt">
       
-      <!-- Modelo 3D del cerebro con la B mayúscula -->
+      <!-- Modelo 3D del cerebro -->
       <a-entity id="brain"
         gltf-model="https://link0s.github.io/Realdiad-Aumentaeda/Brain.glb"
         position="0 0 0"
@@ -97,9 +125,9 @@
         rotation="0 180 0">
       </a-entity>
 
-      <!-- Texto flotante siempre visible -->
-      <a-text value="Grupo #2"
-        position="0 2 0"
+      <!-- Texto flotante actualizado y posicionado más arriba -->
+      <a-text value="Grupo #2 Desarrollo Cognoscitivo"
+        position="0 3.5 0"
         align="center"
         color="yellow"
         scale="2 2 2"
@@ -112,39 +140,51 @@
   </a-scene>
 
   <script>
+    // Variables para manipulación del modelo
     let brain = document.getElementById("brain");
     let isDragging = false;
     let previousX = 0;
+    let previousY = 0;
     let initialDistance = 0;
     let scaleFactor = 2;
+    const rotationSensitivity = 0.5;
 
-    // Rotación manual con touch/mouse
+    // Rotación con mouse (ahora en dos ejes)
     document.addEventListener("mousedown", (event) => {
       isDragging = true;
       previousX = event.clientX;
+      previousY = event.clientY;
     });
 
     document.addEventListener("mousemove", (event) => {
       if (!isDragging) return;
       let deltaX = event.clientX - previousX;
+      let deltaY = event.clientY - previousY;
       previousX = event.clientX;
+      previousY = event.clientY;
       let currentRotation = brain.getAttribute("rotation");
-      brain.setAttribute("rotation", { x: currentRotation.x, y: currentRotation.y + deltaX * 0.5, z: currentRotation.z });
+      brain.setAttribute("rotation", { 
+        x: currentRotation.x - deltaY * rotationSensitivity, 
+        y: currentRotation.y + deltaX * rotationSensitivity, 
+        z: currentRotation.z 
+      });
     });
 
     document.addEventListener("mouseup", () => {
       isDragging = false;
     });
 
+    // Rotación y zoom con touch
     document.addEventListener("touchstart", (event) => {
       if (event.touches.length === 2) {
         initialDistance = Math.hypot(
           event.touches[0].clientX - event.touches[1].clientX,
           event.touches[0].clientY - event.touches[1].clientY
         );
-      } else {
+      } else if (event.touches.length === 1) {
         isDragging = true;
         previousX = event.touches[0].clientX;
+        previousY = event.touches[0].clientY;
       }
     });
 
@@ -157,11 +197,17 @@
         let scaleChange = (currentDistance / initialDistance) * scaleFactor;
         scaleFactor = Math.min(Math.max(scaleChange, 1.5), 4);
         brain.setAttribute("scale", `${scaleFactor} ${scaleFactor} ${scaleFactor}`);
-      } else if (isDragging) {
+      } else if (event.touches.length === 1 && isDragging) {
         let deltaX = event.touches[0].clientX - previousX;
+        let deltaY = event.touches[0].clientY - previousY;
         previousX = event.touches[0].clientX;
+        previousY = event.touches[0].clientY;
         let currentRotation = brain.getAttribute("rotation");
-        brain.setAttribute("rotation", { x: currentRotation.x, y: currentRotation.y + deltaX * 0.5, z: currentRotation.z });
+        brain.setAttribute("rotation", { 
+          x: currentRotation.x - deltaY * rotationSensitivity, 
+          y: currentRotation.y + deltaX * rotationSensitivity, 
+          z: currentRotation.z 
+        });
       }
     });
 
@@ -169,9 +215,23 @@
       isDragging = false;
     });
 
-    // Botón de instrucciones
-    document.getElementById("btn-instrucciones").addEventListener("click", function() {
-      alert("📌 PASOS:\n\n1️⃣ Apunta la cámara al marcador 📸\n2️⃣ Usa un dedo para girar el cerebro 🌀\n3️⃣ Usa dos dedos para hacer zoom 🔍\n4️⃣ Disfruta la experiencia en realidad aumentada 🚀");
+    // Función para mostrar/ocultar la caja de información
+    function toggleInfoBox() {
+      let infoBox = document.getElementById("info-box");
+      infoBox.style.display = (infoBox.style.display === "none" || infoBox.style.display === "") 
+                              ? "block" 
+                              : "none";
+    }
+
+    // Soporte para eventos click y touch en el botón de instrucciones
+    let btnInstrucciones = document.getElementById("btn-instrucciones");
+    btnInstrucciones.addEventListener("click", function(event) {
+      event.stopPropagation();
+      toggleInfoBox();
+    });
+    btnInstrucciones.addEventListener("touchend", function(event) {
+      event.stopPropagation();
+      toggleInfoBox();
     });
   </script>
 </body>
